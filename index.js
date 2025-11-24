@@ -1,95 +1,69 @@
-// Load environment variables
-require("dotenv").config();
-
+const dotenv = require("dotenv");
+dotenv.config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 
-// Models
 const { HoldingsModel } = require("./model/HoldingsModel");
 const { PositionsModel } = require("./model/PositionsModel");
 const { OrdersModel } = require("./model/OrdersModel");
 
+const PORT = process.env.PORT || 3002;
+const MONGO_URL = "mongodb://127.0.0.1:27017/Zerodha";
+
 const app = express();
 
-// -----------------------
-//  Middlewares
-// -----------------------
-app.use(
-  cors({
-    origin: [
-      "http://localhost:3000",
-      "http://localhost:3001",
-      "https://zerodha-frontend-clone.vercel.app", // change to your real frontend URL
-    ],
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true,
-  })
-);
-
-
+// Middlewares (Correct order)
+app.use(cors({
+  origin: ["http://localhost:3000", "http://localhost:3001"],
+  credentials: true
+}));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// -----------------------
-//  Default route
-// -----------------------
-app.get("/", (req, res) => {
-  res.send("Backend running successfully on Vercel!");
-});
+// Routes
+app.get("/", (req, res) => res.send("Server is running "));
+app.get("/test", (req, res) => res.send("Auth route working"));
 
-// -----------------------
-//  AUTH ROUTES
-// -----------------------
 app.use("/api/auth", require("./routes/auth"));
 
-
-// -----------------------
-//  HOLDINGS ROUTE
-// -----------------------
-app.get("/api/allHoldings", async (req, res) => {
-  try {
-    const data = await HoldingsModel.find();
-    res.json(data);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+// Sample routes
+app.get("/allHoldings", async (req, res) => {
+  let allHoldings = await HoldingsModel.find({});
+  res.json(allHoldings);
 });
 
-// -----------------------
-//  POSITIONS ROUTE
-// -----------------------
-app.get("/api/allPositions", async (req, res) => {
-  try {
-    const data = await PositionsModel.find();
-    res.json(data);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+app.get("/allPositions", async (req, res) => {
+  let allPositions = await PositionsModel.find({});
+  res.json(allPositions);
 });
 
-// -----------------------
-//  NEW ORDER ROUTE
-// -----------------------
-app.post("/api/newOrder", async (req, res) => {
+app.post("/newOrder", async (req, res) => {
+  console.log("Request body:", req.body);
+
   try {
-    const newOrder = new OrdersModel(req.body);
+    let newOrder = new OrdersModel({
+      name: req.body.name,
+      qty: req.body.qty,
+      price: req.body.price,
+      mode: req.body.mode,
+    });
+
     await newOrder.save();
     res.json({ message: "Order created", data: newOrder });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  } catch (error) {
+    console.error("Order creation failed:", error);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
-// -----------------------
-//  MONGO DB CONNECT
-// -----------------------
-mongoose
-  .connect(process.env.MONGO_URL)
-  .then(() => console.log("MongoDB Connected"))
-  .catch((err) => console.log("MongoDB Connection Failed:", err.message));
-
-
-// VERY IMPORTANT FOR VERCEL
-module.exports = app;
+// DB Connect + Start Server
+mongoose.connect(MONGO_URL)
+  .then(() => {
+    console.log("Connected to MongoDB");
+    app.listen(PORT, () => console.log(`App started on port ${PORT}!`));
+  })
+  .catch((err) => console.error("MongoDB connection error:", err.message));
+  
