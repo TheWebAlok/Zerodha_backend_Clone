@@ -9,12 +9,11 @@ const { HoldingsModel } = require("./model/HoldingsModel");
 const { PositionsModel } = require("./model/PositionsModel");
 const { OrdersModel } = require("./model/OrdersModel");
 
-const PORT = process.env.PORT || 3002;
-const MONGO_URL = "mongodb://127.0.0.1:27017/Zerodha";
-
 const app = express();
 
-// Middlewares (Correct order)
+const PORT = process.env.PORT || 3002;
+
+// Middlewares
 app.use(cors({
   origin: ["http://localhost:3000", "http://localhost:3001"],
   credentials: true
@@ -24,27 +23,22 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Routes
-app.get("/", (req, res) => res.send("Server is running "));
-app.get("/test", (req, res) => res.send("Auth route working"));
-
+app.get("/", (req, res) => res.send("Server is running"));
 app.use("/api/auth", require("./routes/auth"));
 
-// Sample routes
 app.get("/allHoldings", async (req, res) => {
-  let allHoldings = await HoldingsModel.find({});
+  const allHoldings = await HoldingsModel.find();
   res.json(allHoldings);
 });
 
 app.get("/allPositions", async (req, res) => {
-  let allPositions = await PositionsModel.find({});
+  const allPositions = await PositionsModel.find();
   res.json(allPositions);
 });
 
 app.post("/newOrder", async (req, res) => {
-  console.log("Request body:", req.body);
-
   try {
-    let newOrder = new OrdersModel({
+    const newOrder = new OrdersModel({
       name: req.body.name,
       qty: req.body.qty,
       price: req.body.price,
@@ -53,24 +47,18 @@ app.post("/newOrder", async (req, res) => {
 
     await newOrder.save();
     res.json({ message: "Order created", data: newOrder });
-  } catch (error) {
-    console.error("Order creation failed:", error);
+  } catch (err) {
     res.status(500).json({ message: "Server error" });
   }
 });
 
-// DB Connect + Start Server
-
-// MongoDB Connection
-let isConnected = false;
-async function connectDB() {
-  if (isConnected) return;
-  await mongoose.connect(process.env.MONGO_URL);
-  isConnected = true;
-}
-
-// Vercel Serverless handler
-export default async function handler(req, res) {
-  await connectDB();
-  app(req, res);
-}
+// MongoDB Connection + Start Server
+mongoose.connect(process.env.MONGO_URL)
+  .then(() => {
+    console.log("MongoDB Connected");
+    app.listen(PORT, () => {
+      console.log(`Server running on PORT ${PORT}`);
+    });
+  })
+  .catch(err => console.log("DB Error:", err));
+  

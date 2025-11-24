@@ -13,6 +13,6 @@ const holdingsSchema = new mongoose.Schema({
   }
 });
 
-const HoldingsModel = mongoose.model("holding", holdingsSchema);  // ✅ Yeh important hai
+const HoldingsModel = mongoose.model("holding", holdingsSchema);
 
 module.exports = { HoldingsModel };
