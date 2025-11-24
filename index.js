@@ -21,11 +21,13 @@ app.use(
     origin: [
       "http://localhost:3000",
       "http://localhost:3001",
-      "https://your-frontend.vercel.app"
+      "https://zerodha-frontend-clone.vercel.app", // change to your real frontend URL
     ],
-    credentials: true
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
   })
 );
+
 
 app.use(express.json());
 app.use(cookieParser());
