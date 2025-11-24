@@ -1,3 +1,4 @@
+// Load environment variables
 require("dotenv").config();
 
 const express = require("express");
@@ -12,21 +13,40 @@ const { OrdersModel } = require("./model/OrdersModel");
 
 const app = express();
 
-// Middlewares
-app.use(cors({ origin: "*"}));
+// -----------------------
+//  Middlewares
+// -----------------------
+app.use(
+  cors({
+    origin: [
+      "http://localhost:3000",
+      "http://localhost:3001",
+      "https://your-frontend.vercel.app"
+    ],
+    credentials: true
+  })
+);
+
 app.use(express.json());
 app.use(cookieParser());
 
-// Default Test Route
+// -----------------------
+//  Default route
+// -----------------------
 app.get("/", (req, res) => {
-  res.send("Backend running on Vercel");
+  res.send("Backend running successfully on Vercel!");
 });
 
-// Auth Routes
+// -----------------------
+//  AUTH ROUTES
+// -----------------------
 app.use("/api/auth", require("./routes/auth"));
 
-// HOLDINGS
-app.get("/allHoldings", async (req, res) => {
+
+// -----------------------
+//  HOLDINGS ROUTE
+// -----------------------
+app.get("/api/allHoldings", async (req, res) => {
   try {
     const data = await HoldingsModel.find();
     res.json(data);
@@ -35,8 +55,10 @@ app.get("/allHoldings", async (req, res) => {
   }
 });
 
-// POSITIONS
-app.get("/allPositions", async (req, res) => {
+// -----------------------
+//  POSITIONS ROUTE
+// -----------------------
+app.get("/api/allPositions", async (req, res) => {
   try {
     const data = await PositionsModel.find();
     res.json(data);
@@ -45,8 +67,10 @@ app.get("/allPositions", async (req, res) => {
   }
 });
 
-// NEW ORDER
-app.post("/newOrder", async (req, res) => {
+// -----------------------
+//  NEW ORDER ROUTE
+// -----------------------
+app.post("/api/newOrder", async (req, res) => {
   try {
     const newOrder = new OrdersModel(req.body);
     await newOrder.save();
@@ -56,16 +80,14 @@ app.post("/newOrder", async (req, res) => {
   }
 });
 
-// MONGODB CONNECT (simple)
+// -----------------------
+//  MONGO DB CONNECT
+// -----------------------
 mongoose
-  .connect(process.env.MONGO_URL, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    serverSelectionTimeoutMS: 5000
-  })
-  .then(() => console.log("MongoDB Connected  5000"))
-  .catch((err) => console.log("Connection Failed ", err));
-  
+  .connect(process.env.MONGO_URL)
+  .then(() => console.log("MongoDB Connected"))
+  .catch((err) => console.log("MongoDB Connection Failed:", err.message));
 
-// Export for Vercel
+
+// VERY IMPORTANT FOR VERCEL
 module.exports = app;
