@@ -58,9 +58,14 @@ app.post("/newOrder", async (req, res) => {
 
 // MONGODB CONNECT (simple)
 mongoose
-  .connect(process.env.MONGO_URL)
-  .then(() => console.log("MongoDB Connected"))
-  .catch((err) => console.log("DB Error:", err));
+  .connect(process.env.MONGO_URL, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    serverSelectionTimeoutMS: 5000
+  })
+  .then(() => console.log("MongoDB Connected "))
+  .catch((err) => console.log("Connection Failed ", err));
+  
 
 // Export for Vercel
 module.exports = app;
