@@ -19,7 +19,7 @@ app.use(cookieParser());
 
 // Default Test Route
 app.get("/", (req, res) => {
-  res.send("Backend running on Vercel ✔");
+  res.send("Backend running on Vercel");
 });
 
 // Auth Routes
