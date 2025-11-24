@@ -60,10 +60,17 @@ app.post("/newOrder", async (req, res) => {
 });
 
 // DB Connect + Start Server
-mongoose.connect(MONGO_URL)
-  .then(() => {
-    console.log("Connected to MongoDB");
-    app.listen(PORT, () => console.log(`App started on port ${PORT}!`));
-  })
-  .catch((err) => console.error("MongoDB connection error:", err.message));
-  
+
+// MongoDB Connection
+let isConnected = false;
+async function connectDB() {
+  if (isConnected) return;
+  await mongoose.connect(process.env.MONGO_URL);
+  isConnected = true;
+}
+
+// Vercel Serverless handler
+export default async function handler(req, res) {
+  await connectDB();
+  app(req, res);
+}
